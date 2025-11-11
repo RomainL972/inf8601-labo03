@@ -77,14 +77,12 @@ target_link_libraries(source-checker
     LLVMFrontendOpenMP
 )
 
-add_custom_target(check-source
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/source-checker
+enable_testing()
+add_test(NAME check-source
+	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/source-checker
     -d ${CMAKE_CURRENT_SOURCE_DIR}
     -v ${VARIANT}
 )
-
-add_dependencies(check-source source-checker)
-add_dependencies(check check-source)
 
 endif()
 
