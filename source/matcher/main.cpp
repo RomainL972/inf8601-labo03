@@ -4,42 +4,34 @@
  * \author Sébastien Darche <sebastien.darche@polymtl.ca>
  */
 
-#include "clang/ASTMatchers/ASTMatchFinder.h"
-#include "clang/Tooling/CommonOptionsParser.h"
-#include "clang/Tooling/Tooling.h"
-
-#include "llvm/Support/CommandLine.h"
-
 #include "file_search.hpp"
 
 #include <array>
 #include <iostream>
-
-static llvm::cl::OptionCategory llvmClCategory("Options");
-
-static llvm::cl::opt<unsigned int> variant("v",
-                                           llvm::cl::desc("Variant number"),
-                                           llvm::cl::value_desc("variant"),
-                                           llvm::cl::Required);
-
-static llvm::cl::opt<std::string> directory("d",
-                                            llvm::cl::desc("Lab directory"),
-                                            llvm::cl::value_desc("dir"),
-                                            llvm::cl::Required);
+#include <sstream>
 
 int main(int argc, const char** argv) {
-    llvm::cl::ParseCommandLineOptions(argc, argv);
+    if (argc != 3) {
+        printf("Usage: %s <variant> <lab_directory>\n", argv[0]);
+        return 1;
+    }
 
     // Grep-like search for some constructs
+    std::stringstream buffer;
 
-    auto path = directory.getValue() + "/source/heatsim-mpi.c";
+    buffer << argv[1] << " " << argv[2] << "/source/heatsim-mpi.c\n";
 
-    auto req = getVariantRequirements(variant.getValue());
+    int variant;
+    std::string path;
+
+    buffer >> variant >> path;
+
+    auto req = getVariantRequirements(variant);
 
     std::cout << req;
 
     assertVariant(req, path);
 
-    llvm::outs() << "\n\nChecker OK\n";
+    std::cout << "\n\nChecker OK\n";
     return 0;
 }
