@@ -51,39 +51,16 @@ add_custom_target(check
 
 # ----- Source checker ----- #
 
-if(DEFINED CLANG_INCLUDE_DIR)
-
 add_executable(source-checker
     source/matcher/main.cpp
     source/matcher/file_search.cpp
 )
 
-target_link_libraries(source-checker
-    clangTooling
-    clangFrontend
-    clangSerialization
-    clangDriver
-    clangRewriteFrontend
-    clangRewrite
-    clangParse
-    clangSema
-    clangAnalysis
-    clangAST
-    clangASTMatchers
-    clangEdit
-    clangLex
-    clangBasic
-    LLVMSupport
-    LLVMFrontendOpenMP
-)
-
 enable_testing()
 add_test(NAME check-source
 	COMMAND ${CMAKE_CURRENT_BINARY_DIR}/source-checker
-    -d ${CMAKE_CURRENT_SOURCE_DIR}
-    -v ${VARIANT}
+    ${VARIANT}
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
-endif()
 
 install(TARGETS heatsim)
