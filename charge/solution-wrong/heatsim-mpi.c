@@ -1,5 +1,5 @@
 /* NEGATIVE TEST FIXTURE (charge/): compiles and runs, but never exchanges the east/west borders, so
- * the result is wrong. check-checksums must fail on it: grade 0, nothing timed. */
+ * the result is wrong. the check-* tests must fail on it: grade 0, nothing timed. */
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>

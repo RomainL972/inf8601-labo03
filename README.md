@@ -39,7 +39,7 @@ allez compléter la communication entre les noeuds d'une simulation de chaleur d
 - `tests/`
   - Contient des tests unitaires de `grid.c` et `cart.c`.
 - `scripts/`
-  - Contient les scripts utilisés par les cibles `check-checksums` et `run-all`.
+  - Contient les scripts CMake (`check-topology.cmake`, `run-all.cmake`) utilisés par les tests `check-*` et la cible `run-all`.
 
 Seul le fichier marqué **À COMPLÉTER** doit être modifié.
 
@@ -132,10 +132,20 @@ Les commandes se lancent avec `ninja -C build <cible>`.
     correction, voir _Correction_). Les paramètres se changent avec
     `-DHEATSIM_IMAGE=...`, `-DHEATSIM_ITERATIONS=...`, `-DHEATSIM_DIM_X=...` et
     `-DHEATSIM_DIM_Y=...` à la configuration.
+- `run-check`
+  - Vérifie les six topologies d'un coup (1×1, 1×5, 3×3, 2×5, 4×4 et 8×4) : pour chacune, la
+    simulation s'exécute sur 10 itérations et le SHA-256 de l'image produite doit être celui de
+    `images/check<N>.checksum` (N = nombre de rangs), c'est-à-dire l'image de la solution de
+    référence. Affiche une ligne `Passed` ou `Failed` par topologie. C'est la cible à lancer en
+    premier : si elle échoue, la correction vous donnera 0 sans mesurer le temps.
+  - Une topologie qui ne termine pas est un interblocage : le test est arrêté après 120 s et
+    échoue (`Timeout`). Les topologies 1×5 (un rang est son propre voisin en X, anneau impair en
+    Y) et 3×3 (anneaux impairs) sont celles qui bloquent un échange de bordures mal ordonné.
 - `test` (ou `ctest --test-dir build`)
-  - Exécute les tests unitaires (`test-grid`, `test-cart`) et `check-checksums`, qui vérifie que
-    les topologies 1×1, 1×5, 3×3, 2×5, 4×4 et 8×4 produisent exactement l'image de la solution de référence (une
-    topologie où l'échange des bordures se bloque fait dépasser le délai du test).
+  - Exécute les tests unitaires (`test-grid`, `test-cart`) et un test par topologie
+    (`check-1x1`, `check-1x5`, `check-3x3`, `check-2x5`, `check-4x4`, `check-8x4`), soit les mêmes
+    vérifications que `run-check`. Pour en relancer un seul :
+    `ctest --test-dir build -R check-3x3 --output-on-failure`.
 - `format`
   - Utilise `clang-format` pour formatter le code source.
 

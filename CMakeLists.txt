@@ -75,15 +75,35 @@ target_link_libraries(heatsim PRIVATE heatsim-common MPI::MPI_C)
 # Tests
 # -----------------------------------------------------------------------------
 
+# OpenMPI refuse par défaut de lancer plus de rangs que de coeurs.
+execute_process(COMMAND ${MPIEXEC_EXECUTABLE} --oversubscribe --help
+    RESULT_VARIABLE HEATSIM_OVERSUBSCRIBE_RESULT OUTPUT_QUIET ERROR_QUIET)
+set(HEATSIM_MPIEXEC ${MPIEXEC_EXECUTABLE})
+set(HEATSIM_OVERSUBSCRIBE OFF)
+if (HEATSIM_OVERSUBSCRIBE_RESULT EQUAL 0)
+    list(APPEND HEATSIM_MPIEXEC --oversubscribe)
+    set(HEATSIM_OVERSUBSCRIBE ON)
+endif()
+
 add_subdirectory(tests)
 
-# Plusieurs topologies (1x1, 1x5, 3x3, 2x5, 4x4, 8x4) doivent donner exactement l'image de référence
-# (scripts/run-check). Un échange de bordures qui se bloque dépasse le délai et échoue.
-add_test(NAME check-checksums
-    COMMAND ${PROJECT_SOURCE_DIR}/scripts/run-check $<TARGET_FILE:heatsim> ${PROJECT_BINARY_DIR}/check
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
-set_tests_properties(check-checksums PROPERTIES TIMEOUT 120)
+# Chaque topologie doit donner exactement l'image de référence (scripts/check-topology.cmake).
+# Un échange de bordures qui se bloque dépasse le délai et échoue.
+set(HEATSIM_CHECK_TOPOLOGIES 1x1 1x5 3x3 2x5 4x4 8x4)
+foreach (topology IN LISTS HEATSIM_CHECK_TOPOLOGIES)
+    string(REPLACE "x" ";" dims ${topology})
+    list(GET dims 0 dim_x)
+    list(GET dims 1 dim_y)
+    add_test(NAME check-${topology}
+        COMMAND ${CMAKE_COMMAND}
+            -DHEATSIM=$<TARGET_FILE:heatsim> -DMPIEXEC=${MPIEXEC_EXECUTABLE}
+            -DOVERSUBSCRIBE=${HEATSIM_OVERSUBSCRIBE} -DDIM_X=${dim_x} -DDIM_Y=${dim_y}
+            -DOUT=${PROJECT_BINARY_DIR}/check
+            -P ${PROJECT_SOURCE_DIR}/scripts/check-topology.cmake
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
+    set_tests_properties(check-${topology} PROPERTIES TIMEOUT 120)
+endforeach()
 
 # -----------------------------------------------------------------------------
 # Commandes
@@ -92,13 +112,6 @@ set_tests_properties(check-checksums PROPERTIES TIMEOUT 120)
 set(HEATSIM_RUN_ARGS --input ${HEATSIM_IMAGE} --iterations ${HEATSIM_ITERATIONS})
 set(HEATSIM_RANKS 1)
 math(EXPR HEATSIM_RANKS "${HEATSIM_DIM_X} * ${HEATSIM_DIM_Y}")
-
-execute_process(COMMAND ${MPIEXEC_EXECUTABLE} --oversubscribe --help
-    RESULT_VARIABLE HEATSIM_OVERSUBSCRIBE_RESULT OUTPUT_QUIET ERROR_QUIET)
-set(HEATSIM_MPIEXEC ${MPIEXEC_EXECUTABLE})
-if (HEATSIM_OVERSUBSCRIBE_RESULT EQUAL 0)
-    list(APPEND HEATSIM_MPIEXEC --oversubscribe)
-endif()
 
 add_custom_target(run-serial
     COMMAND ${HEATSIM_MPIEXEC} -n 1 $<TARGET_FILE:heatsim> --dim-x 1 --dim-y 1
@@ -119,10 +132,20 @@ add_custom_target(run-mpi
 
 # Compare les temps du sériel et du parallèle et affiche l'accélération.
 add_custom_target(run-all
-    COMMAND ${PROJECT_SOURCE_DIR}/scripts/run-all $<TARGET_FILE:heatsim> ${HEATSIM_IMAGE}
-            ${HEATSIM_ITERATIONS} ${HEATSIM_DIM_X} ${HEATSIM_DIM_Y} ${PROJECT_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND}
+        -DHEATSIM=$<TARGET_FILE:heatsim> -DMPIEXEC=${MPIEXEC_EXECUTABLE}
+        -DOVERSUBSCRIBE=${HEATSIM_OVERSUBSCRIBE} -DIMAGE=${HEATSIM_IMAGE}
+        -DITERATIONS=${HEATSIM_ITERATIONS} -DDIM_X=${HEATSIM_DIM_X} -DDIM_Y=${HEATSIM_DIM_Y}
+        -DOUT=${PROJECT_BINARY_DIR} -P ${PROJECT_SOURCE_DIR}/scripts/run-all.cmake
     DEPENDS heatsim
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    USES_TERMINAL
+)
+
+# Vérifie toutes les topologies (les tests check-*, sans les tests unitaires).
+add_custom_target(run-check
+    COMMAND ${CMAKE_CTEST_COMMAND} --test-dir ${PROJECT_BINARY_DIR} -R "^check-" --output-on-failure
+    DEPENDS heatsim
     USES_TERMINAL
 )
 

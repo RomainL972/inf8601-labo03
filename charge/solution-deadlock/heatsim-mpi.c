@@ -1,6 +1,6 @@
 /* NEGATIVE TEST FIXTURE (charge/): the classic bug, every rank sends first. Correct when the messages
  * are small enough to be buffered, a deadlock otherwise (and for a rank that is its own neighbour).
- * check-checksums must hang then time out: grade 0, nothing timed. */
+ * the check-* tests must hang then time out: grade 0, nothing timed. */
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
