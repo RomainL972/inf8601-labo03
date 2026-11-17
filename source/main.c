@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
     printf("configurations:\n");
     printf(" - %u iterations\n", iterations);
     printf(" - %u node%s in X\n", dim_x, (dim_x == 1) ? "" : "s");
-    printf(" - %u node%s in Y\n", dim_y, (dim_x == 1) ? "" : "s");
+    printf(" - %u node%s in Y\n", dim_y, (dim_y == 1) ? "" : "s");
     printf(" - input file is '%s'\n", input_file);
     printf(" - output file is '%s'\n", output_file);
 

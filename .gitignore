@@ -1,3 +1,9 @@
-README.pdf
 build/
-source/pipeline-*
+build-*/
+.cache/
+charge/dist/
+__pycache__/
+README.pdf
+images/check*.png
+*.tar.gz
+compile_commands.json

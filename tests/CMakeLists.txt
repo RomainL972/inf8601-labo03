@@ -1,23 +1,14 @@
-add_executable(grid
+add_executable(test-grid
     ../source/grid.c
     grid.c
 )
-add_custom_target(test_grid
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/grid
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
-add_dependencies(test_grid grid)
+target_include_directories(test-grid PRIVATE ../include)
+add_test(NAME test-grid COMMAND test-grid WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-add_executable(cart
+add_executable(test-cart
     ../source/grid.c
     ../source/cart.c
     cart.c
 )
-add_custom_target(test_cart
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/cart
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-)
-add_dependencies(test_cart cart)
-
-add_custom_target(tests)
-add_dependencies(tests test_grid test_cart)
+target_include_directories(test-cart PRIVATE ../include)
+add_test(NAME test-cart COMMAND test-cart WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
